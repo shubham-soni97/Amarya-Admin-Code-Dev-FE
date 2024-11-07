@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../Components/AuthContext";
 import Loading from "../sharable/Loading";
+import { toast } from "react-toastify";
 
 export default function AttendenceHomePage() {
   const [list, setList] = useState([]);
@@ -16,6 +17,7 @@ export default function AttendenceHomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const { encryptionKey } = useAuth();
   const apiUrl = process.env.REACT_APP_API_MESSENGER_URI;
+
   function formatDate(date) {
     const dd = String(date.getDate()).padStart(2, "0");
     const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based in JS
@@ -38,7 +40,7 @@ export default function AttendenceHomePage() {
         setList(response?.data?.data);
       } catch (error) {
         if (error?.response?.message) {
-          console.log("error>>>>>>>>>>>", error);
+          toast.error(error?.response?.message);
         }
       }
     }
@@ -55,7 +57,9 @@ export default function AttendenceHomePage() {
         );
         setWeekBarChartData(response?.data?.data);
       } catch (error) {
-        console.error("Error fetching weekly present count:", error);
+        if (error?.response?.message) {
+          toast.error(error?.response?.message);
+        }
       }
     }
     async function getEmployeePersent() {
@@ -76,6 +80,7 @@ export default function AttendenceHomePage() {
         setPieChartData(response?.data?.data);
       } catch (error) {
         if (error?.response?.message) {
+          toast.error(error?.response?.message);
         }
       }
     }
@@ -97,10 +102,10 @@ export default function AttendenceHomePage() {
       <div style={{ margin: "20px 0px" }}>
         <div className="flex-to-display">
           <Grid container spacing={1}>
-            <Grid item lg={6} md={6} sm={12} xs={12}>
+            <Grid item lg={6} md={12} sm={12} xs={12}>
               <AttendencePieChart pieData={pieChartData} date={date} />
             </Grid>
-            <Grid item lg={6} md={6} sm={12} xs={12}>
+            <Grid item lg={6} md={12} sm={12} xs={12}>
               <EmployeeBarChart barData={weekBarChartData} />
             </Grid>
           </Grid>

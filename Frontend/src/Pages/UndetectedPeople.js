@@ -14,80 +14,14 @@ import {
   MenuItem,
   Modal,
   TablePagination,
-  IconButton,
-  TableFooter,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FirstPageIcon from "@mui/icons-material/FirstPage";
-import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import LastPageIcon from "@mui/icons-material/LastPage";
-import PropTypes from "prop-types";
 import { useAuth } from "../Components/AuthContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 import Loading from "../sharable/Loading";
-import { useTheme } from "@emotion/react";
 
-function TablePaginationActions(props) {
-  const theme = useTheme();
-  const { count, page, rowsPerPage, onPageChange } = props;
-
-  const handleClick = (newPage) => {
-    onPageChange(null, newPage);
-  };
-
-  return (
-    <Box sx={{ flexShrink: 0, ml: 2.5 }}>
-      <IconButton
-        onClick={() => handleClick(0)}
-        disabled={page === 0}
-        aria-label="first page"
-      >
-        {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
-      </IconButton>
-      <IconButton
-        onClick={() => handleClick(page - 1)}
-        disabled={page === 0}
-        aria-label="previous page"
-      >
-        {theme.direction === "rtl" ? (
-          <KeyboardArrowRight />
-        ) : (
-          <KeyboardArrowLeft />
-        )}
-      </IconButton>
-      <IconButton
-        onClick={() => handleClick(page + 1)}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
-      >
-        {theme.direction === "rtl" ? (
-          <KeyboardArrowLeft />
-        ) : (
-          <KeyboardArrowRight />
-        )}
-      </IconButton>
-      <IconButton
-        onClick={() =>
-          handleClick(Math.max(0, Math.ceil(count / rowsPerPage) - 1))
-        }
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
-      >
-        {theme.direction === "rtl" ? <FirstPageIcon /> : <LastPageIcon />}
-      </IconButton>
-    </Box>
-  );
-}
-
-TablePaginationActions.propTypes = {
-  count: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
-  page: PropTypes.number.isRequired,
-  rowsPerPage: PropTypes.number.isRequired,
-};
-
-export default function UndetectedPeople({ approvalData, approvalReq }) {
+export default function UndetectedPeople() {
   const [list, setList] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null); // For preview
   const [open, setOpen] = useState(false); // For modal control
@@ -96,7 +30,7 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { encryptionKey } = useAuth();
   const apiUrl = process.env.REACT_APP_API_MESSENGER_URI;
-  const tags = ["OUTSIDER", "EMPLOYEE"];
+  const tags = ["VISITOR", "EMPLOYEE"];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -108,7 +42,7 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
   };
 
   const handleImageClick = (image) => {
-    setSelectedImage(image); // Set the selected image for preview
+    setSelectedImage(image);
     setOpen(true);
   };
 
@@ -130,7 +64,9 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
       setList(response?.data?.data);
       setIsLoading(false);
     } catch (error) {
-      console.log("error>>>>>>>>>>>", error);
+      if (error?.response?.message) {
+        toast.error(error?.response?.message);
+      }
     }
   }
 
@@ -148,7 +84,9 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
       await getData();
       setIsLoading(false);
     } catch (error) {
-      console.log("error>>>>>>>>>>>", error);
+      if (error?.response?.message) {
+        toast.error(error?.response?.message);
+      }
     }
   }
 
@@ -170,7 +108,9 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
       await getData();
       setIsLoading(false);
     } catch (error) {
-      console.log("error>>>>>>>>>>>", error);
+      if (error?.response?.message) {
+        toast.error(error?.response?.message);
+      }
     }
   }
 
@@ -316,7 +256,6 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
                         })}
                       </Select>
                     </TableCell>
-                    {/* Image Column */}
                     <TableCell align="center" sx={{ padding: 0 }}>
                       <img
                         src={`data:image/jpeg;base64,${row.snapshot}`}
@@ -326,7 +265,7 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
                           handleImageClick(
                             `data:image/jpeg;base64,${row.snapshot}`
                           )
-                        } // Open image in modal
+                        }
                       />
                     </TableCell>
                     <TableCell align="center" sx={{ padding: 0 }}>
@@ -336,36 +275,21 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
                           onClick={() => deleteUnknown(row)}
                         />
                       </Tooltip>
-                      {/* <Tooltip title="Save" placement="top" arrow>
-                        <SaveIcon
-                          sx={{ cursor: "pointer" }}
-                          onClick={() => saveUnknown(row)}
-                        />
-                      </Tooltip> */}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-              <TableFooter sx={{ boxShadow: "none" }}>
-                <TableRow>
-                  <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    colSpan={6}
-                    count={list?.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    SelectProps={{
-                      inputProps: { "aria-label": "rows per page" },
-                      native: true,
-                    }}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    ActionsComponent={TablePaginationActions}
-                  />
-                </TableRow>
-              </TableFooter>
             </Table>
           </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={list?.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Box>
 
         {/* Modal for Image Preview */}
@@ -392,73 +316,6 @@ export default function UndetectedPeople({ approvalData, approvalReq }) {
             )}
           </Box>
         </Modal>
-
-        {/* Modal for Image Save Employee details */}
-        {/* <Modal open={openSaveModal} onClose={handleClose}>
-        <Box
-          sx={{
-            position: "absolute",
-            margin: "auto",
-            top: "50%",
-            left: "50%",
-            height: "80%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 0,
-            borderRadius: 2,
-            padding: 1,
-          }}
-        >
-          <Typography
-            component="span"
-            sx={{
-              fontFamily: "Poppins",
-              fontWeight: "600",
-              color: "#00000099",
-              fontSize: "1.1rem",
-              display: "flex",
-              borderBottom: "1px solid black",
-            }}
-          >
-            <SaveIcon sx={{ marginRight: 1 }} />
-            Save As
-          </Typography>
-          <input type="text" style={{ width: "100%" }} />
-          <Box
-            sx={{
-              overflowY: "scroll",
-              height: "345px",
-              padding: "0 40px 0 0",
-              marginTop: 1,
-            }}
-          >
-            {EmployeeList.map((el) => {
-              return (
-                <Box sx={{ marginBottom: "5px" }}>
-                  <input type="radio" id={el} name="fav_language" value={el} />
-                  <label for={el}>{el}</label>
-                  <br />
-                </Box>
-              );
-            })}
-          </Box>
-          <Box
-            sx={{
-              fontFamily: "Poppins",
-              fontWeight: "600",
-              color: "#00000099",
-              padding: 2,
-              textAlign: "center",
-              fontSize: "1.1rem",
-            }}
-          >
-            <Button variant="contained" color="error">
-              Save
-            </Button>
-          </Box>
-        </Box>
-      </Modal> */}
       </Box>
     );
   }

@@ -6,25 +6,31 @@ import Calendar from "../Components/Calendar";
 import { useEffect, useState } from "react";
 import Loading from "../sharable/Loading";
 import { useAuth } from "../Components/AuthContext";
+import { toast } from "react-toastify";
 import axios from "axios";
 
-export default function EmployeeAttendenceModal() {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [calenderData, setCalenderData] = useState({});
+export default function EmployeeAttendenceModal({ empId, month, year }) {
+  const [selectedYear, setSelectedYear] = useState();
+  const [selectedMonth, setSelectedMonth] = useState();
+  const [calenderData, setCalenderData] = useState([]);
   const [empData, setEmpData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const { encryptionKey } = useAuth();
   const apiUrl = process.env.REACT_APP_API_MESSENGER_URI;
 
   useEffect(() => {
-    refreshData(selectedMonth, selectedYear);
-    getCalenderData(selectedMonth, selectedYear);
+    setSelectedYear(year || new Date().getFullYear());
+    setSelectedMonth(month || new Date().getMonth());
+    refreshData(month, year);
   }, [apiUrl, encryptionKey]);
+
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
 
   const generateYearOptions = () => {
     const startYear = new Date().getFullYear() - 5; // Adjust this range as needed
-    const endYear = new Date().getFullYear() + 5;
+    const endYear = new Date().getFullYear()
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
       years.push(year);
@@ -36,32 +42,37 @@ export default function EmployeeAttendenceModal() {
     ));
   };
 
-  async function getUserDetails(start, end) {
+  async function getUserDetails(month, year) {
     try {
+      let selectMonth = month >= 10 ? month : `0${month}`;
+      let endDate = `${year}-${selectMonth}-${getDaysInMonth(year, month)}`;
+      let startDate = `${year}-${selectMonth}-01`;
       setIsLoading(true);
       const response = await axios.get(
-        `${apiUrl}/attendance/get-attendance-summary?empId=AMEMP038&startDate=2024-08-01&endDate=2024-08-31`,
+        `${apiUrl}/attendance/get-attendance-summary?empId=${empId}&startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             "x-encryption-key": encryptionKey,
           },
         }
       );
-      console.log("response?.data?.data>>>>>>>>>>>>", response?.data?.data);
-
       setEmpData(response?.data?.data);
       setIsLoading(false);
     } catch (error) {
       if (error?.response?.message) {
+        toast.error(error?.response?.message);
       }
     }
   }
 
-  async function getCalenderData(start, end) {
+  async function getCalenderData(month, year) {
     try {
+      let selectMonth = month >= 10 ? month : `0${month}`;
+      let endDate = `${year}-${selectMonth}-${getDaysInMonth(year, month)}`;
+      let startDate = `${year}-${selectMonth}-01`;
       setIsLoading(true);
       const response = await axios.get(
-        `${apiUrl}/attendance/get-user-daily-attendance?empId=AMEMP037&startDate=2024-08-01&endDate=2024-08-31`,
+        `${apiUrl}/attendance/get-user-daily-attendance?empId=${empId}&startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             "x-encryption-key": encryptionKey,
@@ -72,13 +83,51 @@ export default function EmployeeAttendenceModal() {
       setIsLoading(false);
     } catch (error) {
       if (error?.response?.message) {
+        toast.error(error?.response?.message);
       }
     }
   }
 
-  const refreshData = async () => {
+  async function downloadReport() {
+    let selectMonth = selectedMonth >= 10 ? selectedMonth : `0${selectedMonth}`;
+    let endDate = `${selectedYear}-${selectMonth}-${getDaysInMonth(
+      selectedYear,
+      selectedMonth
+    )}`;
+    let startDate = `${selectedYear}-${selectMonth}-01`;
+    try {
+      setIsLoading(true);
+      const response = await axios({
+        url: `${apiUrl}/attendance/get-user-daily-attendance-excel?empId=${empId}&startDate=${startDate}&endDate=${endDate}`,
+        method: "GET",
+        responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+          "x-encryption-key": encryptionKey,
+        },
+      });
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `report_${Number(selectedMonth)}_${selectedYear}.xlsx`;
+      link.click();
+      setIsLoading(false);
+    } catch (error) {
+      if (error?.response?.message) {
+        toast.error(error?.response?.message);
+      }
+      console.error("Error downloading the Excel file", error);
+    }
+  }
+
+  const refreshData = async (month, year) => {
     setIsLoading(true);
-    await Promise.all([getUserDetails(), getCalenderData()]);
+    await Promise.all([
+      getUserDetails(month, year),
+      getCalenderData(month, year),
+    ]);
     setIsLoading(false);
   };
 
@@ -117,10 +166,11 @@ export default function EmployeeAttendenceModal() {
               value={selectedMonth}
               onChange={(e) => {
                 setSelectedMonth(e.target.value);
+                refreshData(e.target.value, selectedYear);
               }}
             >
               {Array.from({ length: 12 }, (v, k) => (
-                <option key={k} value={k}>
+                <option key={k} value={k + 1}>
                   {new Date(0, k).toLocaleString("default", { month: "long" })}
                 </option>
               ))}
@@ -129,6 +179,7 @@ export default function EmployeeAttendenceModal() {
               value={selectedYear}
               onChange={(e) => {
                 setSelectedYear(e.target.value);
+                refreshData(selectedMonth, e.target.value);
               }}
             >
               {generateYearOptions()}
@@ -142,6 +193,7 @@ export default function EmployeeAttendenceModal() {
                 borderRadius: "10px",
                 fontWeight: "bold",
               }}
+              onClick={downloadReport}
             >
               Download Report
               <FileDownloadOutlinedIcon
@@ -157,7 +209,7 @@ export default function EmployeeAttendenceModal() {
         </Box>
         <hr />
         <Box sx={{ display: "flex", gap: "2rem", alignItems: "stretch" }}>
-          <EmployeeAttendencePieChart pieData={empData} />
+          <EmployeeAttendencePieChart empData={empData} />
           <Grid xs={12} md={9} lg={7} sx={{ width: "100%" }}>
             <Box
               sx={{
