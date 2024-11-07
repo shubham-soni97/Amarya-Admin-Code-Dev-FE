@@ -9,79 +9,17 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Tooltip,
-  Select,
-  MenuItem,
   Modal,
-  Button,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
-import SaveIcon from "@mui/icons-material/Save";
 import TablePagination from "@mui/material/TablePagination";
 import axios from "axios";
 import { useAuth } from "../Components/AuthContext";
 
-const rows = [
-  {
-    sNo: 1,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "In",
-  },
-  {
-    sNo: 2,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "Out",
-  },
-  {
-    sNo: 3,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "In",
-  },
-  {
-    sNo: 4,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "Out",
-  },
-  {
-    sNo: 5,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "In",
-  },
-  {
-    sNo: 6,
-    employeeId: "AM45656",
-    employeeName: "Ankit koshta",
-    date: "17-09-2020",
-    time: "11:34:54 AM",
-    image: "./Images/attendance/prashant.jpg",
-    mode: "Out",
-  },
-];
-
 export default function PreviousLogs() {
   const { date } = useParams();
-  const [list, setList] = useState(rows);
+  const [list, setList] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null); // For preview
   const [open, setOpen] = useState(false); // For modal control
   const [page, setPage] = React.useState(0);
@@ -313,7 +251,7 @@ export default function PreviousLogs() {
         <TablePagination
           rowsPerPageOptions={[10, 15, 25]}
           component="div"
-          count={rows.length}
+          count={list.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
