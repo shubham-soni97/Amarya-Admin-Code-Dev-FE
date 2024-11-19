@@ -2,7 +2,7 @@ import * as React from "react";
 import { Box, Grid } from "@mui/material";
 import { PieChart, pieArcLabelClasses } from "@mui/x-charts/PieChart";
 
-export default function EmployeeAttendencePieChart({ pieData }) {
+export default function EmployeeAttendencePieChart({ empData }) {
   return (
     <Box
       sx={{
@@ -16,10 +16,12 @@ export default function EmployeeAttendencePieChart({ pieData }) {
       <Grid xs={12} md={9} lg={7}>
         <PieChart
           colors={[
-            "rgb(0, 98, 169)",
-            "rgb(206, 11, 11)",
-            "rgb(205, 138, 0)",
-            "rgb(255, 88, 6)",
+            "rgb(0 91 157)",
+            "rgb(15 127 207)",
+            "rgb(85 157 209)",
+            "rgb(184, 208, 236)",
+            "#8C8C8C",
+            "#454545",
           ]}
           series={[
             {
@@ -28,26 +30,36 @@ export default function EmployeeAttendencePieChart({ pieData }) {
               data: [
                 {
                   id: 0,
-                  value: 25,
+                  value: empData?.percentages?.presentPercentage,
                   label: "Employees Present",
                 },
                 {
                   id: 1,
-                  value: 25,
-                  label: "Employees Absent",
-                },
-                {
-                  id: 1,
-                  value: 30,
+                  value: empData?.percentages?.workFromHomePercentage,
                   label: "WFH",
                 },
                 {
-                  id: 1,
-                  value: 20,
+                  id: 2,
+                  value: empData?.percentages?.leavePercentage,
                   label: "Employees Leaves",
                 },
+                {
+                  id: 3,
+                  value: empData?.percentages?.absentPercentage,
+                  label: "Employees Absent",
+                },
+                {
+                  id: 4,
+                  value: 0,
+                  label: "Weekends",
+                },
+                {
+                  id: 5,
+                  value: empData?.percentages?.holidayPercentage,
+                  label: "Holiday",
+                },
               ],
-              cx: 130,
+              // cx: 130,
             },
           ]}
           sx={{
@@ -56,8 +68,10 @@ export default function EmployeeAttendencePieChart({ pieData }) {
               fontWeight: "bold",
             },
           }}
+          slotProps={{ legend: { hidden: true } }}
           width={500}
           height={240}
+          
         />
       </Grid>
     </Box>

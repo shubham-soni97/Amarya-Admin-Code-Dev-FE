@@ -1,126 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import "./Calendar.css";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
 
-const Calendar = ({
-  attendance,
-  holidays,
-  selectYear,
-  selectMonth,
-  calenderData,
-}) => {
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 400,
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-  };
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  // const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-
+const Calendar = ({ selectYear, selectMonth, calenderData }) => {
   const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  // const generateYearOptions = () => {
-  //   const startYear = new Date().getFullYear() - 5; // Adjust this range as needed
-  //   const endYear = new Date().getFullYear() + 5;
-  //   const years = [];
-
-  //   for (let year = startYear; year <= endYear; year++) {
-  //     years.push(year);
-  //   }
-
-  //   return years.map((year) => (
-  //     <option key={year} value={year}>
-  //       {year}
-  //     </option>
-  //   ));
-  // };
-
-  // const handleYearChange = (event) => {
-  //   setSelectedYear(parseInt(event.target.value));
-  // };
-
-  // const handleMonthChange = (event) => {
-  //   setSelectedMonth(parseInt(event.target.value));
-  // };
-
-  // const handlePreviousMonth = () => {
-  //   if (selectedMonth === 0) {
-  //     setSelectedYear(selectedYear - 1);
-  //     setSelectedMonth(11);
-  //   } else {
-  //     setSelectedMonth(selectedMonth - 1);
-  //   }
-  // };
-
-  // const handleNextMonth = () => {
-  //   if (selectedMonth === 11) {
-  //     setSelectedYear(selectedYear + 1);
-  //     setSelectedMonth(0);
-  //   } else {
-  //     setSelectedMonth(selectedMonth + 1);
-  //   }
-  // };
-
-  const isHoliday = (day) => {
-    return holidays?.some(
-      (holiday) =>
-        holiday.year === selectYear &&
-        holiday.month === selectMonth &&
-        holiday.day === day
-    );
+    return new Date(year, month, 0).getDate();
   };
 
   const isAttendanceDay = (day) => {
-    return attendance?.some(
-      (att) =>
-        att.year === selectYear && att.month === selectMonth && att.day === day
-    );
+    let digit = day >= 10 ? day : Number(`0${day}`);
+    const matchedHoliday = calenderData?.find((holiday) => {
+      return Number(holiday?.date?.split("-")[2]) === digit;
+    });
+    if (matchedHoliday) {
+      const status = matchedHoliday.attendance_status;
+      if (status === "Present") return "Present";
+      else if (status === "leave") return "leave";
+      else if (status === "wfh") return "wfh";
+      else if (status === "Absent") return "Absent";
+      else if (status === "Holiday") return "Holiday";
+      else if (
+        status === "Saturday" ||
+        status === "Sunday" ||
+        status === "Weekend"
+      )
+        return "Weekend";
+    }
+    return undefined;
   };
 
   const generateCalendar = () => {
     const daysInMonth = getDaysInMonth(selectYear, selectMonth);
-    const firstDayOfMonth = new Date(selectYear, selectMonth, 1).getDay();
-    // Adjust for Monday start: convert Sunday (0) to 6 and others
+    const firstDayOfMonth = new Date(selectYear, selectMonth - 1, 1).getDay();
     const adjustedStartDay = (firstDayOfMonth + 6) % 7;
     const calendarDays = [];
 
-    // Add empty cells for days before the start of the month
     for (let i = 0; i < adjustedStartDay; i++) {
       calendarDays.push(<div key={`empty-${i}`} className="day empty"></div>);
     }
-
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(selectYear, selectMonth, day);
-      const dayOfWeek = date.getDay();
-
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-      const isHolidayMarked = isHoliday(day);
-      const isPresent = isAttendanceDay(day);
-
+      const attendanceStatus = isAttendanceDay(day);
       calendarDays.push(
         <div
           key={day}
-          className={`day ${isWeekend || isHolidayMarked ? "weekend" : ""} ${
-            isPresent ? "present" : ""
-          }`}
-          onClick={() => onDaySelect(date)}
+          className={`day ${attendanceStatus === "Weekend" ? "weekend" : ""} 
+          ${attendanceStatus === "Holiday" ? "holiday" : ""} 
+          ${attendanceStatus === "Absent" ? "absent" : ""} 
+          ${attendanceStatus === "wfh" ? "wfh" : ""} 
+          ${attendanceStatus === "leave" ? "leave" : ""} 
+          ${attendanceStatus === "Present" ? "present" : ""}`}
         >
           {day}
         </div>
@@ -128,11 +56,6 @@ const Calendar = ({
     }
 
     return calendarDays;
-  };
-
-  const onDaySelect = (day) => {
-    console.log("day?>>>>>>>>>>>>>>>>>", new Date().getDay());
-    handleOpen();
   };
 
   const getDayNames = () => {
@@ -154,47 +77,18 @@ const Calendar = ({
 
   return (
     <Box
-      sx={{ margin: "20px 0", gap: "2rem", alignItems: "stretch" }}
+      sx={{
+        margin: "20px 0",
+        alignItems: "stretch",
+        // , gap: "2rem"
+      }}
       className="flex-to-display"
     >
       <div className="calender-box">
-        {/* <div className="calendar-controls">
-          <div>
-            <select value={selectedMonth} onChange={handleMonthChange}>
-              {Array.from({ length: 12 }, (v, k) => (
-                <option key={k} value={k}>
-                  {new Date(0, k).toLocaleString("default", { month: "long" })}
-                </option>
-              ))}
-            </select>
-            <select value={selectedYear} onChange={handleYearChange}>
-              {generateYearOptions()}
-            </select>
-          </div>
-          <div className="display-flex">
-            <ArrowBackIosIcon onClick={handlePreviousMonth} />
-            <ArrowForwardIosIcon onClick={handleNextMonth} />
-          </div>
-        </div> */}
         <div className="calendar">
           <div className="day-names">{getDayNames()}</div>
           <div className="calendar-days">{generateCalendar()}</div>
         </div>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box sx={style}>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Text in a modal
-            </Typography>
-            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-            </Typography>
-          </Box>
-        </Modal>
       </div>
       <Box
         style={{
@@ -202,8 +96,8 @@ const Calendar = ({
           padding: "1rem",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          height: "100%",
+          justifyContent: "space-around",
+          // height: "100%",
         }}
       >
         <div className="flex-center">
@@ -211,7 +105,7 @@ const Calendar = ({
           <div className="ml-15">Present</div>
         </div>
         <div className="flex-center">
-          <div className="color-indicator abscent"></div>
+          <div className="color-indicator absent"></div>
           <div className="ml-15">Absent</div>
         </div>
         <div className="flex-center">
