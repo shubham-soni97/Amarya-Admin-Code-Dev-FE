@@ -22,13 +22,10 @@ import OtpP from "./OtpPop";
 import { toast } from "react-toastify";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import CircularProgress from '@mui/joy/CircularProgress';
-import Model from "./Model";
 
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const [otp, setOtp] = useState("");
-  const [openModel, setOpenModel] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [openOtpP, setOpenOtpP] = useState(false);
@@ -159,7 +156,7 @@ const LoginPage = () => {
               style: { color: "white" },
             }}
             label="Username"
-            disabled ={openEmailP|| openModel}
+            disabled ={openEmailP|| openOtpP}
             variant="standard"
             fullWidth
             onChange={(e) => setUsername(e.target.value)}
@@ -197,7 +194,7 @@ const LoginPage = () => {
               ),
             }}
             label="Password"
-            disabled ={openEmailP|| openModel}
+            disabled ={openEmailP|| openOtpP}
             variant="standard"
             type={showPassword ? "text" : "password"}
             value={password} // Ensure the value prop is set to the password state
@@ -226,19 +223,12 @@ const LoginPage = () => {
                 closeEmailP={setOpenEmailP}
                 openOtpP={() => {
                   setOpenEmailP(false);
-                  setOpenModel(true);
+                  setOpenOtpP(true);
                 }}
                 setEmail={setEmail}
               />
             )}
-            {/* {openOtpP && <OtpP closeOtpP={setOpenOtpP} email={email} />} */}
-            {openModel && (
-              <Model
-                closeModel={setOpenModel}
-                closeOtpP={setOpenOtpP}
-                email={email}
-              />
-            )}
+            {openOtpP && <OtpP closeOtpP={setOpenOtpP} email={email} />}
           </Typography>
           <Button
             sx={{
